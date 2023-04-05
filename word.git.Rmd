@@ -1,0 +1,439 @@
+
+## HEADER ####
+
+Who:KK
+
+What: Statistics for Data science
+
+Last edited: 2023-04-04
+
+
+## CONTENTS ####
+
+correlation
+
+ANOVA
+
+t-test
+
+Mann-Whitney U-test
+
+Linear regression
+
+## correlation
+
+correlation is defined as the whether there is demnostratable a association between two continous numeric variables. correlation measured from -1 to +1. the correlation quantified as either being +1 which means positive correlation and -1 which means negative correlation and 0 which means no correlation.
+
+# Testing Assumptions
+
+Before performing we should keep in mind that Null hypothesis and alternate hypothesis.And alph p_value which is 0.05(significance level).If p-value is more than 0.05 we accept our Null hypothesis whic means no relationship.If p-value is less than 0.05 we reject null hypothesis and accept Alternate hypothesis which means there is association between them.
+
+
+# load the data 
+
+```{r}
+library(car)
+data("iris") #inbuild data in R
+print(iris)
+View(iris)
+```
+
+# About the dataset
+
+This dataset is about measurements in centimeters of the variables such as sepal length and width and petal length and width, respectively, for 50 flowers from each of 3 species of iris.the species are iris setosa,verscicolor, and virginica.
+
+The order of operation for correlation is
+1.Question
+2.Graph
+3.Test
+4.validate(eg. test our assumption)
+
+# 1.Question(the data must be continous numeric variable)
+
+we are going to find whether their is correlation between sepal length and width.
+
+# 2. Graph(graph the data for visualization)
+
+```{r}
+plot(iris$Sepal.Length, iris$Sepal.Width,
+     xlab = "sepal length",
+     ylab = "sepal width",
+     main = "corrlation between sepal length and width(in cm)",
+     col = iris$Species, pch = 16)
+```
+
+# 3.Test
+
+```{r}
+cor.test(iris$Sepal.Length, iris$Sepal.Width)
+```
+
+From the output we can say that the p- value is 0.15 which high compared to our (alpha value 0.05) so we can accept our Null hypothesis which means there is nocorrelation between sepal length and width.
+
+# 4.Validate(checking the assumption of our data is normally distributed or not)
+
+```{r}
+hist(iris$Sepal.Length)
+hist(iris$Sepal.Width)
+```
+
+# Results
+
+By performing correlation between sepal length and width we can say that there is no significant association between sepal length and width of the all three species.Here p-value is very important which is more than our significance level(0.05) which means we should accept our null hypothesis.And our corrleation value is -0.117 which suggest that their is weak negative correlation. from the hypothesis testing we can say that there is not enough evidence to suggest a correlation between sepal length and width.
+
+## ANOVA
+
+Analysis of variance is used to compare multiple sample with a single test.it is used when the categorical features has more than two categories.Anova are two types one way Anova it is performed when their is a only one independent variable and two way anova performed wwhen there is more than one independent variable.
+
+# Features to be considered
+
+Null hypothesis - if all pairs of sample means are equal.
+Altrenate hypothesis - if one pair of sample mean is different.
+
+```{r}
+pest <- structure(list(damage = c(113.7, 94.4, 103.6, 
+                                  106.3, 104, 98.9, 
+                                  115.1, 99.1, 120.2, 99.4, 
+                                  88, 97.9, 61.1, 72.2, 73.7, 
+                                  81.4, 72.2, 48.4, 50.6, 88.2, 
+                                  46.9, 32.2, 48.3, 62.1, 69, 
+                                  45.7, 47.4, 32.4, 54.6, 43.6, 
+                                  104.6, 107, 110.4, 93.9, 105, 
+                                  82.8, 92.2, 91.5, 75.9, 100.4), 
+                       treatment = c("control", "control", 
+                                     "control", "control",
+                                     "control", "control", 
+                                     "control", "control", 
+                                     "control", "control",
+                                     "x.half", "x.half", 
+                                     "x.half", "x.half", 
+                                     "x.half", "x.half", 
+                                     "x.half", "x.half", 
+                                     "x.half", "x.half", 
+                                     "x.full", "x.full", 
+                                     "x.full", "x.full",
+                                     "x.full", "x.full", 
+                                     "x.full", "x.full", 
+                                     "x.full", "x.full", 
+                                     "organic", "organic", 
+                                     "organic", "organic", 
+                                     "organic", "organic", 
+                                     "organic", "organic", 
+                                     "organic", "organic")), 
+                  class = "data.frame", 
+                  row.names = c(NA, -40L))
+pest$treatment <- factor(pest$treatment) #convert character to factor
+```
+
+# About the dataset
+
+Think of this data as the result of an experiment looking at the effectiveness of pesticide treatment on leaf damage. Let us imagine that this experiment measured leaf damage (variable “damage” measured in mm squared) and that the plants were treated with one of 4 treatment levels:
+ Variable treatment with levels
+ 1.control
+ 2.x.half
+ 3.x.full
+ 4.organic
+
+The experiment is of course designed to look at an overall effect the various treatments may have to reduce leaf damage relative to the control. In addition, it is of interest to examine the effect of the organic treatment compared to that of the x.half to the x.full.The experiment ran using 40 potted plants spaced 1m from each other in a greenhouse setting. Each treatment was randomly assigned to 10 plants. Onto each plant was placed 5 red lily beetle (Lilioceris lilii) pairs.
+
+# Explore the data
+
+```{r}
+head(pest)
+summary(pest)
+levels(pest$treatment)
+```
+
+# extract variables
+
+```{r}
+damage = pest$damage
+treatment = pest$treatment
+```
+
+#compare mean of data
+
+```{r}
+tapply(damage, treatment, mean) #mean of all groups
+tapply(damage, treatment, length) #sample of all groups
+```
+
+# plot the data using boxplot()
+
+```{r}
+boxplot(damage ~ treatment, 
+        xlab = 'Treatment types',
+        ylab = 'Damage', 
+        main = 'Treatment vs Damage',
+        col = rainbow(4))
+```
+  
+# perform anova test aov()
+
+```{r}
+result <- aov(damage ~ treatment, data = pest)
+summary(result)
+```
+
+# Examine the assumption of gaussian 
+
+```{r}
+hist(rstandard(result, main = "gaussian"))
+plot(rstandard(result) ~ fitted(result))
+```
+
+# Barlett test (Homogenity of variance performed on the variable damage with each level of treatment)
+
+```{r}
+bartlett.test(damage ~ treatment)
+```
+
+p-value is more than alpha value which means we can accept null hypothesis.so which means some group of treatment shares the same level of variance.
+
+# posthoc test
+
+```{r}
+TukeyHSD(result)
+```
+
+# post hoc test is performed to compare mean of each group effect.
+
+organic and control has no difference.
+for x.full vs control and organic has lot of difference.
+for x.half vs control and organic has a difference.
+even x.half and x.full have some difference.
+
+```{r}
+plot(TukeyHSD(result))
+```
+
+# Result
+
+By performing the anova test the mean of all groups are not equal which means every treatment as it own effect.for control and organic treatment we can see a little difference but damage is high. while x-full has less damage compared to all treatments and x-half is better.so which means the chemical dosage matters.from the overall result we can say that pest damage is depends upon the type of treatment.
+
+## T-test
+
+T-test is used to compare means of between two groups.
+
+# T-test for 2 independent samples
+
+```{r}
+density <- c("high","high","high","high","high","high","high",
+             "low","low","low","low","low","low","low")
+height <- c(2.1,3.5,4.3,3.2,4.5,3.7,2.7, 
+            6.1,8,6.9,9.1,7.5,8,7.4)
+(treegrowth <- data.frame(density,height))
+```
+
+# About the dataset
+
+The example we will use here is the amount of tree growth over a period of time,where samples were taken of individual trees grown under two conditions - high density of trees versus low density.The hypothesis we are testing is whether there is evidence the samples came from different populations.by inference, we are possibly interested in whether there is an effect of density on growth.
+
+#make a graph with hist(check for the gaussian)
+
+```{r}
+hist(treegrowth$height[treegrowth$density=="high"])
+hist(treegrowth$height[treegrowth$density=="low"])
+```
+
+#make qqplot(check the normality of data)
+
+```{r}
+library(car)
+qqPlot(treegrowth$height[treegrowth$density=="high"])
+qqPlot(treegrowth$height[treegrowth$density=="low"])
+```
+
+#perform t-test
+
+```{r}
+t.test(formula = height ~ density, data = treegrowth)
+```
+
+# make a graph with boxplot
+
+```{r}
+boxplot(height ~ density,
+        xlab = "density",
+        ylab = "height",
+        main = "density vs height",
+        col = rainbow(2))
+```
+
+#Result
+
+By performing t-test we can say that both sample came from different population,there is evidence that p-value is less than alpha value which means we reject null hypothesis and accept alternate hypothesis.and also mean of high density is3.42 while for low density is 7.57.
+
+# one sample t-test
+
+```{r}
+earwigs <- c(22.1, 16.3, 19.1, 19.9, 19.2, 17.7, 22.5, 17.7, 24.1, 17.8, 
+             21.9, 24.9, 13.8, 17.2, 17.6, 19.9, 17.1, 10, 10.7, 22)
+mymu <- 17.0
+```
+
+# About the dataset
+
+The example is a sample of earwigs measured in length to the nearest 0.1 mm.There is a hypothesis that global warming has impacted the development in the population and they are getting larger. A long term dataset has established a mean earwig length of 17.0 (NB, this is our estimate of “mu”, the population mean we will compare our sample to). Are the earwigs getting bigger?
+
+# check for normality
+
+```{r}
+hist(earwigs)
+qqPlot(earwigs)
+```
+
+#perform t-test
+
+```{r}
+t.test(x = earwigs,
+       mu = mymu)
+```
+
+# Result
+
+we found no evidence that mean length of earwigs in our sample was different to the historical mean.
+
+# Two paired sample test
+
+```{r}
+cort.t0 <- c(0.59, 0.68, 0.74, 0.86, 0.54, 0.85, 0.7, 0.81, 0.79, 0.76, 
+             0.49, 0.64, 0.74, 0.51, 0.57, 0.74, 0.77, 0.72, 0.52, 0.49)
+
+cort.t1 <- c(1.13, 0.81, 0.77, 0.72, 0.45, 0.9, 0.7, 0.7, 0.98, 0.96, 1.1, 
+             0.63, 0.91, 1.1, 0.99, 0.72, 1.11, 1.2, 0.77, 0.91)
+```
+
+# About the dataset
+
+The example here is a measure of the hormone cortisol in pregnant cows (related to stress in mammals). 
+A measure was taken in each individual twice; once as a baseline measure, and once after a treatment of soothing music being played to the cows for 3 hours per day. The prediction is that the mean level of cortisol will decrease relative to baseline after experiencing the music treatment.
+
+# Check for normality
+
+```{r}
+hist(cort.t0)
+hist(cort.t1)
+```
+
+#Check for qqplot
+
+```{r}
+qqPlot(cort.t0)
+qqPlot(cort.t1)
+```
+
+# perform t-test
+
+```{r}
+t.test(cort.t0, cort.t1, paired = TRUE)
+```
+
+# Result
+
+By performing two way t-test the p-value is less alpha value which means that the mean level of cortisol will decrease relative to baseline after experiencing the music treatment.
+
+## Mann-Whitney U-test
+
+The Mann-Whitney U-test wilcox.test() in R, is an alternative to the t-test when your data cannot achieve the assumptions for the t-test. The t-test is robust,especially when sample size is large, or the deviation from assumptions is similar for both samples.However, when sample size is not very large (e.g. ~30 per sample or less), and there is skew or the samples are dissimilar,the Mann-Whitney U-test is a good choice. Two sample and one sample methods exist.
+
+```{r}
+diet <- c(3, 3, 1, 2, 2, 2, 2, 0, 2, 2, 1, 2, 3, 1, 1)
+
+diet.bone <- c(5, 6, 1, 2, 3, 5, 1, 7, 5, 1, 2, 2, 5, 2, 4)
+```
+
+# About the dataset
+
+The example here is chicken egg count for a control,and a bonemeal diet.
+
+# Check for normal distribution
+
+```{r}
+hist(diet)
+hist(diet.bone)
+qqPlot(diet)
+qqPlot(diet.bone)
+```
+
+# wilcox test
+
+```{r}
+wilcox.test(diet, diet.bone)
+boxplot(diet, diet.bone, ylab = 'Egg count')
+```
+
+# Result
+
+We found evidence of a difference in the number of eggs laid under a control diet and a a diet supplemeted with bone meal.
+
+## Linear regression
+
+dataset source:https://www.kaggle.com/datasets/aungpyaeap/fish
+market
+
+```{r}
+library(readxl) #load library
+setwd ("C:/Users/DELL/Downloads") #set working directory
+fish <- read_excel("fish.xlsx")
+names(fish)
+table(fish$Species)
+```
+# slice out the rows of perch
+
+```{r}
+fish$Species =="Perch"
+perch <- fish[fish$Species=="Perch" , ]
+perch
+```
+
+find the linear relationship between height and width of the perch species.
+
+#make a plot
+
+```{r}
+plot(perch$Height, perch$Width,
+     xlab = "Perch height",
+     ylab = "Perch width",
+     main = "Height vs width")
+```
+
+# make regression
+
+```{r}
+mylm <- lm(formula = Width ~ Height, data = perch)
+mylm
+```
+
+#Test our assumption
+
+```{r}
+par(mfrow = c(2,2))
+plot(mylm)
+par(mfrow = c(1,1))
+```
+
+Our data follows the normal distribution and we have homoscedasticity which is we have constant variance an have have no outliers in our data which is great!.
+
+# perform shapiro test for normality
+
+```{r}
+shapiro.test(residuals(mylm))
+```
+p- value is more than significance level we can accept null hypothesis which means our data meets the normality.
+
+
+# predictions
+
+```{r}
+prediction <- predict(mylm, interval = "confidence")
+prediction
+```
+# Result
+
+```{r}
+summary(mylm)
+```
+we found significant evidance that linear relationship between height predictingwidth of the fish.for each centimeter increase in height will result in increase in width of the fish in centimeter.the multiple r squared is very import that is 96% which is high for our model that is variation in perch width is explained my perch height.
+
+
